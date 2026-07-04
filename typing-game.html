@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ 极速打字大师 - Typing Master</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-dark: #0a0e1a;
+    --bg-card: #131a2e;
+    --bg-card-hover: #1a2340;
+    --primary: #00e5ff;
+    --primary-dim: rgba(0,229,255,0.15);
+    --secondary: #ff6ec7;
+    --success: #00ff88;
+    --warning: #ffaa00;
+    --danger: #ff4444;
+    --gold: #ffd700;
+    --text: #e0e8ff;
+    --text-dim: #6b7ba3;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ===== 星空背景 ===== */
+  #stars-canvas {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* ===== 通用样式 ===== */
+  .page { display: none; position: relative; z-index: 1; min-height: 100vh; }
+  .page.active { display: flex; flex-direction: column; align-items: center; }
+
+  .title-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    margin: 30px 0 10px;
+    text-shadow: none;
+    filter: drop-shadow(0 0 20px rgba(0,229,255,0.3));
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    text-align: center;
+    font-size: 1rem;
+    margin-bottom: 30px;
+  }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    padding: 12px 32px;
+    border: 2px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.2), transparent);
+    transition: left 0.5s;
+  }
+  .btn:hover::before { left: 100%; }
+  .btn:hover {
+    background: var(--primary);
+    color: var(--bg-dark);
+    box-shadow: 0 0 30px rgba(0,229,255,0.4);
+    transform: translateY(-2px);
+  }
+  .btn.btn-pink { border-color: var(--secondary); color: var(--secondary); }
+  .btn.btn-pink:hover {
+    background: var(--secondary); color: var(--bg-dark);
+    box-shadow: 0 0 30px rgba(255,110,199,0.4);
+  }
+  .btn.btn-gold { border-color: var(--gold); color: var(--gold); }
+  .btn.btn-gold:hover {
+    background: var(--gold); color: var(--bg-dark);
+    box-shadow: 0 0 30px rgba(255,215,0,0.4);
+  }
+  .btn.btn-sm { padding: 8px 20px; font-size: 0.8rem; }
+  .btn.btn-success { border-color: var(--success); color: var(--success); }
+  .btn.btn-success:hover {
+    background: var(--success); color: var(--bg-dark);
+    box-shadow: 0 0 30px rgba(0,255,136,0.4);
+  }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid rgba(0,229,255,0.1);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: all 0.3s;
+  }
+  .card:hover {
+    border-color: rgba(0,229,255,0.3);
+    box-shadow: 0 0 20px rgba(0,229,255,0.1);
+    transform: translateY(-4px);
+  }
+
+  /* ===== 首页 ===== */
+  #home-page .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1000px;
+    width: 90%;
+    margin: 0 auto 40px;
+  }
+  .menu-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(0,229,255,0.1);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  .menu-card::after {
+    content: '';
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(0,229,255,0.05) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .menu-card:hover::after { opacity: 1; }
+  .menu-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,229,255,0.15);
+  }
+  .menu-card .icon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .menu-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: var(--primary);
+  }
+  .menu-card p {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  /* ===== 用户信息栏 ===== */
+  .user-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,229,255,0.1);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+  }
+  .user-bar .left { display: flex; align-items: center; gap: 20px; }
+  .user-bar .right { display: flex; align-items: center; gap: 16px; }
+  .user-bar .username {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .user-bar .level-badge {
+    background: linear-gradient(135deg, var(--gold), #ff8c00);
+    color: #000;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.75rem;
+  }
+  .user-bar .stat {
+    color: var(--text-dim);
+  }
+  .user-bar .stat span { color: var(--primary); font-weight: 700; }
+  .xp-bar-mini {
+    width: 120px; height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .xp-bar-mini .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 3px;
+    transition: width 0.5s;
+  }
+  .user-bar .home-link {
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.3s;
+    font-size: 1.1rem;
+  }
+  .user-bar .home-link:hover { color: var(--primary); }
+
+  /* ===== 登录页 ===== */
+  .login-box {
+    background: var(--bg-card);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 400px;
+    max-width: 90vw;
+    margin-top: 60px;
+    text-align: center;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+  }
+  .login-box input {
+    width: 100%;
+    padding: 14px 20px;
+    background: rgba(0,229,255,0.05);
+    border: 2px solid rgba(0,229,255,0.2);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 1rem;
+    font-family: 'Noto Sans SC', sans-serif;
+    outline: none;
+    transition: border-color 0.3s;
+    margin: 8px 0;
+  }
+  .login-box input:focus { border-color: var(--primary); }
+  .login-box .btn { width: 100%; margin-top: 16px; }
+
+  /* ===== 字母练习页 ===== */
+  .game-area {
+    width: 90%;
+    max-width: 900px;
+    margin-top: 70px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .game-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .game-stat {
+    background: var(--bg-card);
+    border: 1px solid rgba(0,229,255,0.1);
+    border-radius: 12px;
+    padding: 12px 24px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .game-stat .label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .game-stat .value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .game-stat .value.combo { color: var(--warning); }
+  .game-stat .value.score { color: var(--gold); }
+
+  /* ===== 落下的字母 ===== */
+  #letter-game-area {
+    position: relative;
+    width: 100%;
+    height: 450px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(0,229,255,0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .falling-letter {
+    position: absolute;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-shadow: 0 0 15px rgba(0,229,255,0.5);
+    transition: transform 0.1s;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .falling-letter.hit {
+    animation: hitEffect 0.4s ease-out forwards;
+    color: var(--success);
+    text-shadow: 0 0 30px rgba(0,255,136,0.8);
+  }
+  .falling-letter.miss {
+    color: var(--danger);
+    text-shadow: 0 0 30px rgba(255,68,68,0.8);
+    animation: missEffect 0.4s ease-out forwards;
+  }
+  @keyframes hitEffect {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.8); opacity: 0.8; }
+    100% { transform: scale(0); opacity: 0; }
+  }
+  @keyframes missEffect {
+    0% { opacity: 1; }
+    100% { transform: translateY(30px); opacity: 0; }
+  }
+  /* 爆炸粒子 */
+  .particle {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  /* 底部生命线 */
+  .lives-bar {
+    width: 100%;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255,68,68,0.05);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  .heart { font-size: 1.5rem; transition: all 0.3s; }
+  .heart.lost { opacity: 0.2; transform: scale(0.7); }
+
+  /* ===== 单词模式 ===== */
+  #word-game-area {
+    position: relative;
+    width: 100%;
+    height: 450px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(0,229,255,0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .falling-word {
+    position: absolute;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 2;
+    display: flex;
+    gap: 2px;
+  }
+  .falling-word .char {
+    color: var(--text);
+    text-shadow: 0 0 8px rgba(224,232,255,0.3);
+    transition: color 0.15s, text-shadow 0.15s;
+  }
+  .falling-word .char.typed {
+    color: var(--success);
+    text-shadow: 0 0 15px rgba(0,255,136,0.6);
+  }
+  .falling-word .char.current {
+    color: var(--primary);
+    text-shadow: 0 0 20px rgba(0,229,255,0.8);
+    animation: pulse 0.6s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .falling-word.completed {
+    animation: wordComplete 0.5s ease-out forwards;
+  }
+  @keyframes wordComplete {
+    0% { transform: scale(1); opacity: 1; filter: brightness(2); }
+    100% { transform: scale(1.3); opacity: 0; }
+  }
+
+  /* 当前输入框 */
+  .input-display {
+    background: var(--bg-card);
+    border: 2px solid rgba(0,229,255,0.2);
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    min-width: 300px;
+    text-align: center;
+    color: var(--primary);
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .input-display .cursor {
+    display: inline-block;
+    width: 3px;
+    height: 1.8rem;
+    background: var(--primary);
+    animation: blink 0.8s infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ===== 难度选择 ===== */
+  .difficulty-select {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .diff-btn {
+    padding: 8px 20px;
+    border: 2px solid var(--text-dim);
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+  }
+  .diff-btn.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-dim);
+  }
+  .diff-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* ===== 结算面板 ===== */
+  .result-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .result-overlay.active { display: flex; }
+  .result-panel {
+    background: var(--bg-card);
+    border: 2px solid var(--primary);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 60px rgba(0,229,255,0.2);
+    animation: slideUp 0.5s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .result-panel h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    margin-bottom: 24px;
+    color: var(--gold);
+  }
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 30px;
+  }
+  .result-stat {
+    background: rgba(0,229,255,0.05);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .result-stat .label { font-size: 0.75rem; color: var(--text-dim); }
+  .result-stat .value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    color: var(--primary);
+  }
+  .result-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ===== 等级面板 ===== */
+  .level-up-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 300;
+    background: linear-gradient(135deg, var(--bg-card), #1a1a3e);
+    border: 3px solid var(--gold);
+    border-radius: 24px;
+    padding: 48px;
+    text-align: center;
+    box-shadow: 0 0 100px rgba(255,215,0,0.3);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .level-up-toast.active { transform: translate(-50%, -50%) scale(1); }
+  .level-up-toast h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .level-up-toast p { color: var(--text); font-size: 1.1rem; margin-bottom: 8px; }
+  .level-up-toast .rewards { color: var(--success); margin: 16px 0; }
+
+  /* ===== 排行榜 ===== */
+  .leaderboard {
+    width: 90%;
+    max-width: 700px;
+    margin-top: 70px;
+  }
+  .lb-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .lb-table th {
+    text-align: left;
+    padding: 12px 16px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(0,229,255,0.2);
+  }
+  .lb-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .lb-table tr:hover { background: rgba(0,229,255,0.03); }
+  .rank-badge {
+    width: 30px; height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .rank-1 { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; }
+  .rank-2 { background: linear-gradient(135deg, #c0c0c0, #808080); color: #000; }
+  .rank-3 { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; }
+
+  /* ===== 个人资料 ===== */
+  .profile-section {
+    width: 90%;
+    max-width: 800px;
+    margin-top: 70px;
+  }
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .profile-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--bg-dark);
+    flex-shrink: 0;
+  }
+  .profile-info h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: var(--primary);
+  }
+  .profile-info .level {
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .xp-bar-large {
+    width: 100%;
+    max-width: 400px;
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .xp-bar-large .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 6px;
+    transition: width 1s ease;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  /* ===== 成就 ===== */
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .achievement {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .achievement.unlocked {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(255,215,0,0.1);
+  }
+  .achievement .ach-icon { font-size: 2rem; margin-bottom: 8px; }
+  .achievement .ach-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .achievement .ach-desc { font-size: 0.75rem; color: var(--text-dim); }
+  .achievement.locked { opacity: 0.35; filter: grayscale(1); }
+
+  /* ===== 游戏选择子面板 ===== */
+  .game-config {
+    background: var(--bg-card);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 16px;
+    padding: 24px 32px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 600px;
+  }
+  .game-config h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* ===== 虚拟键盘 ===== */
+  .keyboard-hint {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    opacity: 0.4;
+  }
+  .key-hint {
+    width: 36px; height: 36px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    transition: all 0.2s;
+  }
+  .key-hint.active {
+    background: var(--primary-dim);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 15px rgba(0,229,255,0.3);
+  }
+  .key-hint.home-row {
+    border-color: rgba(0,229,255,0.2);
+  }
+
+  /* ===== 模式选择标签 ===== */
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .mode-tab {
+    padding: 8px 20px;
+    border: 1px solid rgba(0,229,255,0.2);
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+  }
+  .mode-tab.active {
+    background: var(--primary-dim);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  /* ===== 连击特效 ===== */
+  .combo-flash {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 4rem;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 150;
+    opacity: 0;
+  }
+  .combo-flash.show {
+    animation: comboAnim 0.8s ease-out forwards;
+  }
+  @keyframes comboAnim {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+  }
+
+  /* ===== 进度条 (HP) ===== */
+  .hp-bar-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .hp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+    border-radius: 4px;
+    transition: width 0.3s;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.2); border-radius: 3px; }
+
+  .hidden { display: none !important; }
+
+  /* 用户选择列表 */
+  .user-list {
+    margin-top: 20px;
+    text-align: left;
+  }
+  .user-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(0,229,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .user-list-item:hover {
+    background: rgba(0,229,255,0.1);
+    border: 1px solid var(--primary);
+  }
+  .user-list-item .info { display: flex; align-items: center; gap: 12px; }
+  .user-list-item .user-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--primary-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    color: var(--primary);
+  }
+  .user-list-item .meta { font-size: 0.8rem; color: var(--text-dim); }
+  .user-list-item .del-btn {
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+  }
+  .user-list-item .del-btn:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+
+<!-- 连击特效 -->
+<div class="combo-flash" id="combo-flash"></div>
+
+<!-- 升级提示 -->
+<div class="level-up-toast" id="level-up-toast">
+  <h2>⬆ LEVEL UP!</h2>
+  <p id="level-up-text">升级到 Lv.2</p>
+  <div class="rewards" id="level-up-rewards">解锁新内容！</div>
+  <button class="btn btn-gold btn-sm" onclick="closeLevelUp()" style="margin-top:16px">太棒了！</button>
+</div>
+
+<!-- 结算面板 -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-panel">
+    <h2 id="result-title">🎮 游戏结束</h2>
+    <div class="result-stats" id="result-stats"></div>
+    <div id="result-xp" style="margin-bottom:20px;color:var(--success);font-family:'Orbitron',sans-serif;"></div>
+    <div class="result-buttons">
+      <button class="btn" onclick="restartGame()">再来一局</button>
+      <button class="btn btn-pink" onclick="goHome()">返回首页</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 用户栏 ===== -->
+<div class="user-bar hidden" id="user-bar">
+  <div class="left">
+    <span class="home-link" onclick="goHome()" title="首页">🏠</span>
+    <span class="username" id="bar-username"></span>
+    <span class="level-badge" id="bar-level"></span>
+    <div class="xp-bar-mini">
+      <div class="fill" id="bar-xp-fill" style="width:0%"></div>
+    </div>
+    <span class="stat">⭐ <span id="bar-score">0</span></span>
+  </div>
+  <div class="right">
+    <span class="stat" title="最高连击">🔥 <span id="bar-max-combo">0</span></span>
+    <span class="stat" title="总游戏局数">🎮 <span id="bar-games">0</span></span>
+  </div>
+</div>
+
+<!-- ===== 登录页 ===== -->
+<div class="page active" id="login-page">
+  <div class="title-text">⚡ TYPING MASTER</div>
+  <div class="subtitle">极速打字大师 - 成为键盘高手！</div>
+  <div class="login-box">
+    <div style="font-size:2.5rem;margin-bottom:16px">⌨️</div>
+    <h2 style="font-family:'Orbitron',sans-serif;color:var(--primary);margin-bottom:20px;">选择用户</h2>
+    <input type="text" id="username-input" placeholder="输入你的名字..." maxlength="12" autocomplete="off">
+    <button class="btn" onclick="login()">开始冒险</button>
+    <div class="user-list" id="user-list"></div>
+  </div>
+</div>
+
+<!-- ===== 首页 ===== -->
+<div class="page" id="home-page">
+  <div class="title-text" style="font-size:2rem;margin-top:70px;">⚡ 极速打字大师</div>
+  <div class="subtitle" id="home-welcome">欢迎回来！选择一个模式开始练习吧</div>
+  <div class="menu-grid">
+    <div class="menu-card" onclick="startLetterMode()">
+      <span class="icon">🔤</span>
+      <h3>字母练习</h3>
+      <p>从基础字母开始，熟悉键盘布局，击落下落的字母！</p>
+    </div>
+    <div class="menu-card" onclick="startWordMode()">
+      <span class="icon">📖</span>
+      <h3>单词练习</h3>
+      <p>挑战英文单词拼写，提升打字速度和准确度！</p>
+    </div>
+    <div class="menu-card" onclick="showLeaderboard()">
+      <span class="icon">🏆</span>
+      <h3>排行榜</h3>
+      <p>查看你和朋友的最高分，争夺冠军宝座！</p>
+    </div>
+    <div class="menu-card" onclick="showProfile()">
+      <span class="icon">👤</span>
+      <h3>个人中心</h3>
+      <p>查看等级、成就和统计数据，见证你的成长！</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 字母练习页 ===== -->
+<div class="page" id="letter-page">
+  <div class="game-area">
+    <div class="game-config" id="letter-config">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <h3>🔤 字母练习</h3>
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-rows="home" onclick="setLetterRow(this,'home')">主行键</button>
+          <button class="mode-tab" data-rows="top" onclick="setLetterRow(this,'top')">上排键</button>
+          <button class="mode-tab" data-rows="all" onclick="setLetterRow(this,'all')">全部</button>
+        </div>
+      </div>
+      <div class="difficulty-select" style="margin-top:12px;">
+        <button class="diff-btn active" onclick="setDifficulty(this,1)">🌱 简单</button>
+        <button class="diff-btn" onclick="setDifficulty(this,2)">⚡ 普通</button>
+        <button class="diff-btn" onclick="setDifficulty(this,3)">🔥 困难</button>
+        <button class="diff-btn" onclick="setDifficulty(this,4)">💀 地狱</button>
+      </div>
+      <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-success" onclick="startLetterGame()" id="letter-start-btn">开始游戏</button>
+      </div>
+    </div>
+    <div class="game-stats hidden" id="letter-stats">
+      <div class="game-stat">
+        <div class="label">得分</div>
+        <div class="value score" id="l-score">0</div>
+      </div>
+      <div class="game-stat">
+        <div class="label">连击</div>
+        <div class="value combo" id="l-combo">0</div>
+      </div>
+      <div class="game-stat">
+        <div class="label">准确率</div>
+        <div class="value" id="l-accuracy">100%</div>
+      </div>
+      <div class="game-stat">
+        <div class="label">WPM</div>
+        <div class="value" id="l-wpm">0</div>
+      </div>
+    </div>
+    <div id="letter-game-area"></div>
+    <div class="hp-bar-container hidden" id="l-hp-container">
+      <div class="hp-bar" id="l-hp-bar" style="width:100%"></div>
+    </div>
+    <div class="lives-bar hidden" id="l-lives-bar"></div>
+    <div class="keyboard-hint" id="keyboard-hint"></div>
+  </div>
+</div>
+
+<!-- ===== 单词练习页 ===== -->
+<div class="page" id="word-page">
+  <div class="game-area">
+    <div class="game-config" id="word-config">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <h3>📖 单词练习</h3>
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-wlen="short" onclick="setWordLen(this,'short')">短单词</button>
+          <button class="mode-tab" data-wlen="medium" onclick="setWordLen(this,'medium')">中单词</button>
+          <button class="mode-tab" data-wlen="long" onclick="setWordLen(this,'long')">长单词</button>
+        </div>
+      </div>
+      <div class="difficulty-select" style="margin-top:12px;">
+        <button class="diff-btn active" onclick="setWordDifficulty(this,1)">🌱 简单</button>
+        <button class="diff-btn" onclick="setWordDifficulty(this,2)">⚡ 普通</button>
+        <button class="diff-btn" onclick="setWordDifficulty(this,3)">🔥 困难</button>
+      </div>
+      <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-success" onclick="startWordGame()" id="word-start-btn">开始游戏</button>
+      </div>
+    </div>
+    <div class="game-stats hidden" id="word-stats">
+      <div class="game-stat">
+        <div class="label">得分</div>
+        <div class="value score" id="w-score">0</div>
+      </div>
+      <div class="game-stat">
+        <div class="label">连击</div>
+        <div class="value combo" id="w-combo">0</div>
+      </div>
+      <div class="game-stat">
+        <div class="label">准确率</div>
+        <div class="value" id="w-accuracy">100%</div>
+      </div>
+      <div class="game-stat">
+        <div class="label">WPM</div>
+        <div class="value" id="w-wpm">0</div>
+      </div>
+    </div>
+    <div id="word-game-area"></div>
+    <div class="hp-bar-container hidden" id="w-hp-container">
+      <div class="hp-bar" id="w-hp-bar" style="width:100%"></div>
+    </div>
+    <div class="input-display hidden" id="word-input-display">
+      <span id="word-typed-text"></span><span class="cursor"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 排行榜页 ===== -->
+<div class="page" id="lb-page">
+  <div class="title-text" style="font-size:2rem;margin-top:70px;">🏆 排行榜</div>
+  <div class="leaderboard">
+    <table class="lb-table" id="lb-table">
+      <thead>
+        <tr><th>排名</th><th>玩家</th><th>等级</th><th>总分</th><th>最高WPM</th><th>最高连击</th></tr>
+      </thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+    <div style="text-align:center;margin-top:24px;">
+      <button class="btn btn-sm" onclick="goHome()">返回首页</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 个人中心页 ===== -->
+<div class="page" id="profile-page">
+  <div class="profile-section">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profile-avatar">A</div>
+      <div class="profile-info">
+        <h2 id="profile-name">Admin</h2>
+        <div class="level" id="profile-level">Lv.1 新手打字员</div>
+        <div class="xp-bar-large">
+          <div class="fill" id="profile-xp-fill" style="width:0%"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px;" id="profile-xp-text">0 / 100 XP</div>
+      </div>
+    </div>
+    <div class="stats-grid" id="profile-stats"></div>
+    <h3 style="font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--gold);margin-bottom:12px;">🎖 成就</h3>
+    <div class="achievements-grid" id="achievements-grid"></div>
+    <div style="text-align:center;margin-top:32px;">
+      <button class="btn btn-sm" onclick="goHome()">返回首页</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================
+//  游戏核心逻辑
+// ============================
+
+// ----- 数据 -----
+const LEVELS = [
+  { level: 1, title: '新手打字员', xpNeeded: 0 },
+  { level: 2, title: '初级学员',   xpNeeded: 100 },
+  { level: 3, title: '打字学徒',   xpNeeded: 250 },
+  { level: 4, title: '键盘侠',     xpNeeded: 500 },
+  { level: 5, title: '打字能手',   xpNeeded: 800 },
+  { level: 6, title: '疾风手指',   xpNeeded: 1200 },
+  { level: 7, title: '键盘大师',   xpNeeded: 1800 },
+  { level: 8, title: '闪电快手',   xpNeeded: 2500 },
+  { level: 9, title: '打字宗师',   xpNeeded: 3500 },
+  { level: 10, title: '至尊打字王', xpNeeded: 5000 },
+  { level: 11, title: '键盘之神',  xpNeeded: 7000 },
+  { level: 12, title: '传说 · 超越极限', xpNeeded: 10000 },
+];
+
+const ACHIEVEMENTS = [
+  { id: 'first_game',  icon: '🎮', name: '初出茅庐',   desc: '完成第一局游戏', check: u => u.totalGames >= 1 },
+  { id: 'combo_5',     icon: '🔥', name: '小试牛刀',   desc: '达成5连击', check: u => u.maxCombo >= 5 },
+  { id: 'combo_10',    icon: '💥', name: '连击达人',   desc: '达成10连击', check: u => u.maxCombo >= 10 },
+  { id: 'combo_25',    icon: '🌟', name: '连击大师',   desc: '达成25连击', check: u => u.maxCombo >= 25 },
+  { id: 'combo_50',    icon: '💫', name: '连击之王',   desc: '达成50连击', check: u => u.maxCombo >= 50 },
+  { id: 'wpm_20',      icon: '🐢', name: '稳步前行',   desc: 'WPM达到20', check: u => u.maxWPM >= 20 },
+  { id: 'wpm_40',      icon: '🐇', name: '速度提升',   desc: 'WPM达到40', check: u => u.maxWPM >= 40 },
+  { id: 'wpm_60',      icon: '🚀', name: '风驰电掣',   desc: 'WPM达到60', check: u => u.maxWPM >= 60 },
+  { id: 'wpm_80',      icon: '⚡', name: '闪电之速',   desc: 'WPM达到80', check: u => u.maxWPM >= 80 },
+  { id: 'acc_90',      icon: '🎯', name: '精准射手',   desc: '单局准确率≥90%', check: u => u.bestAccuracy >= 90 },
+  { id: 'acc_95',      icon: '🏅', name: '百发百中',   desc: '单局准确率≥95%', check: u => u.bestAccuracy >= 95 },
+  { id: 'score_500',   icon: '⭐', name: '五百之星',   desc: '单局得分≥500', check: u => u.bestScore >= 500 },
+  { id: 'score_1000',  icon: '🌟', name: '千分王者',   desc: '单局得分≥1000', check: u => u.bestScore >= 1000 },
+  { id: 'games_10',    icon: '📅', name: '坚持不懈',   desc: '完成10局游戏', check: u => u.totalGames >= 10 },
+  { id: 'games_50',    icon: '💪', name: '训练有素',   desc: '完成50局游戏', check: u => u.totalGames >= 50 },
+  { id: 'level_5',     icon: '👑', name: '崭露头角',   desc: '达到等级5', check: u => u.level >= 5 },
+  { id: 'level_10',    icon: '🏅', name: '实力超群',   desc: '达到等级10', check: u => u.level >= 10 },
+];
+
+const LETTER_SETS = {
+  home: 'asdfjkl;',
+  top: 'qwertyuiop',
+  all: 'abcdefghijklmnopqrstuvwxyz'
+};
+
+const WORDS = {
+  short: ['cat','dog','run','big','red','sun','cup','hat','pen','box','map','key','fox','web','art','bed','day','eye','fly','gap','hot','ice','joy','kit','log','net','old','pie','row','sit','top','use','van','win','yes','zip','age','arm','bag','bit','bus','car','cut','did','end','fan','gas','hit','job','led','mix','nap','oil','pet','raw','sea','tip','war','zip','fun','add','aim','ban','bar','bay','bet','bow','bud','bug','cab','cam','cap','con','cop','cow','dam','den','dew','dim','dip','dot','dry','due','dug','dye','era','eve','fed','fee','fig','fit','fix','fog','fur','gym','ham','hen','hey','hid','hip','hug','inn','ion','jam','jar','jaw','jet','jog','lap','lay','leg','lid','lip','lit','mad','man','mat','may','met','mid','mob','mod','mud','mug','nap','new','nod','nor','not','now','nut','oak','odd','one','opt','ore','our','out','owe','own','pad','pan','pat','pay','pea','peg','pin','pit','ply','pod','pop','pot','pro','pry','pub','pug','pun','put','rag','ran','rat','raw','ray','rib','rid','rim','rip','rob','rod','rot','row','rub','rug','rum','run','rut','rye','sad','sap','sat','saw','say','sea','set','sew','shy','sin','sip','sir','six','ski','sly','sob','sod','son','sow','spy','sue','sum','tab','tad','tag','tan','tap','tar','tax','tea','ten','the','tie','tin','tip','toe','ton','too','tow','toy','try','tub','tug','vet','vow','wag','war','was','wax','way','web','wet','who','why','wig','win','wit','woe','wok','won','wow','yam','yap','yaw','yea','yes','yet','yew','zip','zoo'],
+  medium: ['apple','brain','chair','dance','eagle','flame','grape','house','image','juice','knife','lemon','music','night','ocean','piano','queen','river','stone','tiger','umbrella','valley','window','yellow','zebra','bridge','castle','desert','forest','garden','island','market','planet','rocket','shadow','temple','winter','anchor','beauty','candle','dragon','empire','frozen','gentle','harbor','insect','jungle','kitten','ladder','magnet','nature','orange','palace','quartz','random','silver','travel','unique','violet','wonder','annual','basket','cherry','donkey','effect','fellow','global','heaven','import','jacket','launch','mirror','narrow','object','police','reduce','signal','tunnel','useful','vision','wallet','basket','chimney','diamond','feather','general','healthy','imagine','journey','kitchen','library','machine','natural','obvious','package','quality','regular','special','thousand','variety','weather','amazing','balance','captain','develop','element','fiction','genuine','helpful','idea','jumble','kingdom','lecture','mystery','nervous','obvious','pattern','quality','random','satisfy','teacher','uniform','variety','welcome','yearbook','zealot'],
+  long: ['adventure','beautiful','challenge','dangerous','education','fantastic','generous','happiness','important','knowledge','landscape','mechanism','nightmare','operation','paragraph','questions','recognize','structure','technique','universal','vegetable','wonderful','accomplish','background','celebration','democracy','environment','forgiveness','government','helicopter','illustrate','judgement','kilometers','leadership','management','negotiate','opportunity','philosophy','regardless','superiority','technology','understand','volunteer','absolutely','basketball','campground','dangerous','everything','friendship','graduation','historical','imaginary','journalist','lightning','meanwhile','necessary','organize','president','quarterback','reasonable','strawberry','television','ultimately','vocabulary','wandering','youngster','challenge','conspiracy','difference','encouraged','furthermore','generation','impossible','introduced','masterpiece','nevertheless','opportunity','particularly','relationship','satisfaction','traditional','unbelievable','competition','comprehensive','consequence','extraordinary','independently','manufacturing','professional','straightforward','understanding','acknowledgement','communication','determination','entertainment','implementation','responsibility','sophisticated']
+};
+
+// ----- 状态 -----
+let currentUser = null;
+let gameState = null;
+let gameMode = null; // 'letter' | 'word'
+let animFrameId = null;
+
+// ----- 工具 -----
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[rand(0, arr.length - 1)]; }
+
+// ----- 存储 -----
+function loadUsers() {
+  return JSON.parse(localStorage.getItem('typing_master_users') || '{}');
+}
+function saveUsers(users) {
+  localStorage.setItem('typing_master_users', JSON.stringify(users));
+}
+function getUserData(name) {
+  const users = loadUsers();
+  return users[name] || createUserData(name);
+}
+function createUserData(name) {
+  return {
+    name,
+    level: 1,
+    totalXP: 0,
+    totalScore: 0,
+    maxCombo: 0,
+    maxWPM: 0,
+    bestAccuracy: 0,
+    bestScore: 0,
+    totalGames: 0,
+    letterGames: 0,
+    wordGames: 0,
+    totalKeystrokes: 0,
+    correctKeystrokes: 0,
+    achievements: [],
+    history: []
+  };
+}
+function saveCurrentUser() {
+  if (!currentUser) return;
+  const users = loadUsers();
+  users[currentUser.name] = currentUser;
+  saveUsers(users);
+}
+
+// ----- 星空背景 -----
+function initStars() {
+  const canvas = $('#stars-canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    stars = [];
+    for (let i = 0; i < 150; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        speed: Math.random() * 0.3 + 0.05,
+        opacity: Math.random() * 0.8 + 0.2,
+        twinkle: Math.random() * Math.PI * 2
+      });
+    }
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const t = Date.now() * 0.001;
+    stars.forEach(s => {
+      const op = s.opacity * (0.6 + 0.4 * Math.sin(t * 0.5 + s.twinkle));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(180,210,255,${op})`;
+      ctx.fill();
+      s.y += s.speed;
+      if (s.y > canvas.height + 5) {
+        s.y = -5;
+        s.x = Math.random() * canvas.width;
+      }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+initStars();
+
+// ----- 键盘高亮 -----
+function initKeyboardHint() {
+  const rows = [
+    ['q','w','e','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l',';'],
+    ['z','x','c','v','b','n','m']
+  ];
+  const container = $('#keyboard-hint');
+  rows.forEach(row => {
+    const rowDiv = document.createElement('div');
+    rowDiv.style.cssText = 'display:flex;gap:4px;justify-content:center;margin:2px 0;width:100%;';
+    row.forEach(key => {
+      const k = document.createElement('div');
+      k.className = 'key-hint';
+      k.id = 'key-' + key;
+      k.textContent = key.toUpperCase();
+      if (key === 'f' || key === 'j') k.classList.add('home-row');
+      rowDiv.appendChild(k);
+    });
+    container.appendChild(rowDiv);
+  });
+}
+initKeyboardHint();
+
+function flashKey(key) {
+  const el = $('#key-' + key.toLowerCase());
+  if (!el) return;
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 200);
+}
+
+// ----- 页面切换 -----
+function showPage(id) {
+  $$('.page').forEach(p => p.classList.remove('active'));
+  $(`#${id}`).classList.add('active');
+  if (id !== 'login-page') {
+    $('#user-bar').classList.remove('hidden');
+  } else {
+    $('#user-bar').classList.add('hidden');
+  }
+}
+
+// ----- 登录 -----
+function login() {
+  const input = $('#username-input');
+  const name = input.value.trim();
+  if (!name) return;
+  currentUser = getUserData(name);
+  if (!loadUsers()[name]) {
+    saveCurrentUser();
+  }
+  refreshUserBar();
+  goHome();
+  input.value = '';
+}
+
+function switchUser(name) {
+  currentUser = getUserData(name);
+  refreshUserBar();
+  goHome();
+}
+
+function deleteUser(name) {
+  const users = loadUsers();
+  delete users[name];
+  saveUsers(users);
+  refreshUserList();
+}
+
+function refreshUserList() {
+  const users = loadUsers();
+  const list = $('#user-list');
+  list.innerHTML = '';
+  const names = Object.keys(users).sort((a, b) => users[b].totalScore - users[a].totalScore);
+  if (names.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-dim);font-size:0.85rem;">暂无存档，输入名字开始冒险吧！</div>';
+    return;
+  }
+  names.forEach(name => {
+    const u = users[name];
+    const item = document.createElement('div');
+    item.className = 'user-list-item';
+    item.innerHTML = `
+      <div class="info" onclick="switchUser('${name}')">
+        <div class="user-icon">${name[0].toUpperCase()}</div>
+        <div>
+          <div style="font-weight:700;">${name}</div>
+          <div class="meta">Lv.${u.level} | ⭐${u.totalScore} | 🎮${u.totalGames}局</div>
+        </div>
+      </div>
+      <span class="del-btn" onclick="event.stopPropagation();deleteUser('${name}')">✕ 删除</span>
+    `;
+    list.appendChild(item);
+  });
+}
+
+// Enter key on login
+$('#username-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+// ----- 用户栏刷新 -----
+function refreshUserBar() {
+  if (!currentUser) return;
+  $('#bar-username').textContent = currentUser.name;
+  const lvl = getLevelInfo(currentUser);
+  $('#bar-level').textContent = `Lv.${currentUser.level}`;
+  $('#bar-score').textContent = currentUser.totalScore;
+  $('#bar-max-combo').textContent = currentUser.maxCombo;
+  $('#bar-games').textContent = currentUser.totalGames;
+  const xpProgress = lvl.progress * 100;
+  $('#bar-xp-fill').style.width = xpProgress + '%';
+}
+
+function getLevelInfo(user) {
+  const totalXP = user.totalXP;
+  let current = LEVELS[0];
+  let next = LEVELS[1];
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (totalXP >= LEVELS[i].xpNeeded) {
+      current = LEVELS[i];
+      next = LEVELS[i + 1] || { xpNeeded: LEVELS[i].xpNeeded + 2000, title: 'MAX' };
+      break;
+    }
+  }
+  const xpInLevel = totalXP - current.xpNeeded;
+  const xpNeeded = next.xpNeeded - current.xpNeeded;
+  return {
+    current,
+    next,
+    progress: xpNeeded > 0 ? xpInLevel / xpNeeded : 1,
+    xpInLevel,
+    xpNeeded
+  };
+}
+
+// ----- 首页 -----
+function goHome() {
+  stopGame();
+  showPage('home-page');
+  if (currentUser) {
+    const lvl = getLevelInfo(currentUser);
+    $('#home-welcome').textContent = `欢迎回来，${currentUser.name}！你是 ${lvl.current.title}`;
+  }
+  refreshUserBar();
+  refreshUserList();
+}
+
+// ----- 字母练习 -----
+let letterRow = 'home';
+let letterDifficulty = 1;
+
+function setLetterRow(btn, row) {
+  letterRow = row;
+  btn.closest('.mode-tabs').querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setDifficulty(btn, diff) {
+  letterDifficulty = diff;
+  btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function startLetterMode() {
+  showPage('letter-page');
+  stopGame();
+}
+
+const DIFF_SETTINGS = {
+  1: { speed: 0.6, spawnRate: 2200, maxLetters: 3, lives: 5 },
+  2: { speed: 0.9, spawnRate: 1600, maxLetters: 5, lives: 4 },
+  3: { speed: 1.3, spawnRate: 1200, maxLetters: 7, lives: 3 },
+  4: { speed: 1.8, spawnRate: 900,  maxLetters: 10, lives: 2 },
+};
+
+function startLetterGame() {
+  const settings = DIFF_SETTINGS[letterDifficulty];
+  gameMode = 'letter';
+  gameState = {
+    score: 0,
+    combo: 0,
+    maxComboThisGame: 0,
+    hits: 0,
+    misses: 0,
+    totalAttempts: 0,
+    lives: settings.lives,
+    maxLives: settings.lives,
+    letters: [],
+    spawnTimer: 0,
+    spawnRate: settings.spawnRate,
+    speed: settings.speed,
+    maxLetters: settings.maxLetters,
+    startTime: Date.now(),
+    running: true,
+    wpm: 0,
+    difficulty: letterDifficulty
+  };
+
+  // UI
+  $('#letter-config').classList.add('hidden');
+  $('#letter-stats').classList.remove('hidden');
+  $('#l-hp-container').classList.remove('hidden');
+  $('#l-lives-bar').classList.remove('hidden');
+  updateLivesBar();
+  updateHPBar();
+  updateLetterStats();
+
+  // Start game loop
+  lastFrameTime = Date.now();
+  gameLoop();
+}
+
+function updateLivesBar() {
+  const bar = $('#l-lives-bar');
+  let html = '';
+  for (let i = 0; i < gameState.maxLives; i++) {
+    html += `<span class="heart ${i >= gameState.lives ? 'lost' : ''}">❤️</span>`;
+  }
+  bar.innerHTML = html;
+}
+
+function updateHPBar() {
+  const pct = (gameState.lives / gameState.maxLives) * 100;
+  $('#l-hp-bar').style.width = pct + '%';
+}
+
+function updateLetterStats() {
+  $('#l-score').textContent = gameState.score;
+  $('#l-combo').textContent = gameState.combo;
+  const acc = gameState.totalAttempts > 0 ? Math.round(gameState.hits / gameState.totalAttempts * 100) : 100;
+  $('#l-accuracy').textContent = acc + '%';
+  const elapsed = (Date.now() - gameState.startTime) / 60000;
+  gameState.wpm = elapsed > 0 ? Math.round(gameState.hits / 5 / elapsed) : 0;
+  $('#l-wpm').textContent = gameState.wpm;
+}
+
+let lastFrameTime = 0;
+
+function gameLoop() {
+  if (!gameState || !gameState.running) return;
+  const now = Date.now();
+  const dt = now - lastFrameTime;
+  lastFrameTime = now;
+
+  // Spawn new letters
+  gameState.spawnTimer += dt;
+  if (gameState.spawnTimer >= gameState.spawnRate && gameState.letters.length < gameState.maxLetters) {
+    spawnLetter();
+    gameState.spawnTimer = 0;
+  }
+
+  // Move letters
+  const area = gameMode === 'letter' ? '#letter-game-area' : '#word-game-area';
+  const areaEl = $(area);
+  const areaH = areaEl.offsetHeight;
+
+  gameState.letters.forEach(l => {
+    l.y += gameState.speed * (dt / 16);
+    if (l.el) {
+      l.el.style.top = l.y + 'px';
+    }
+  });
+
+  // Check for missed letters (hit bottom)
+  const toRemove = [];
+  gameState.letters.forEach(l => {
+    if (l.y > areaH - 30 && !l.hit && !l.missed) {
+      l.missed = true;
+      toRemove.push(l);
+      gameState.lives--;
+      gameState.combo = 0;
+      gameState.misses++;
+      gameState.totalAttempts++;
+      if (l.el) { l.el.classList.add('miss'); }
+      setTimeout(() => removeLetter(l), 400);
+      updateHPBar();
+      updateLivesBar();
+    }
+  });
+
+  if (gameState.lives <= 0) {
+    gameState.running = false;
+    endGame();
+    return;
+  }
+
+  updateLetterStats();
+  if (gameMode === 'word') updateWordStats();
+  animFrameId = requestAnimationFrame(gameLoop);
+}
+
+function spawnLetter() {
+  const chars = LETTER_SETS[letterRow];
+  const char = chars[rand(0, chars.length - 1)];
+  const area = $('#letter-game-area');
+  const w = area.offsetWidth;
+  const x = rand(40, w - 40);
+  const el = document.createElement('div');
+  el.className = 'falling-letter';
+  el.textContent = char.toUpperCase();
+  el.style.left = x + 'px';
+  el.style.top = '-40px';
+  area.appendChild(el);
+  const letter = { char: char.toLowerCase(), x, y: -40, el, hit: false, missed: false };
+  gameState.letters.push(letter);
+}
+
+function removeLetter(l) {
+  if (l.el && l.el.parentNode) l.el.parentNode.removeChild(l.el);
+  const idx = gameState.letters.indexOf(l);
+  if (idx > -1) gameState.letters.splice(idx, 1);
+}
+
+function spawnParticles(x, y, color) {
+  const area = gameMode === 'letter' ? '#letter-game-area' : '#word-game-area';
+  const container = $(area);
+  for (let i = 0; i < 8; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.background = color;
+    const angle = (Math.PI * 2 / 8) * i;
+    const dist = rand(20, 50);
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    p.style.transition = 'all 0.5s ease-out';
+    container.appendChild(p);
+    requestAnimationFrame(() => {
+      p.style.transform = `translate(${dx}px, ${dy}px)`;
+      p.style.opacity = '0';
+    });
+    setTimeout(() => p.remove(), 600);
+  }
+}
+
+function showComboFlash(combo) {
+  const el = $('#combo-flash');
+  let text = '';
+  let color = '#00e5ff';
+  if (combo >= 50) { text = 'LEGENDARY!'; color = '#ffd700'; }
+  else if (combo >= 25) { text = 'INCREDIBLE!'; color = '#ff6ec7'; }
+  else if (combo >= 15) { text = 'AMAZING!'; color = '#ff6ec7'; }
+  else if (combo >= 10) { text = 'GREAT!'; color = '#00ff88'; }
+  else if (combo >= 5) { text = 'NICE!'; color = '#00e5ff'; }
+  else return;
+  el.textContent = text;
+  el.style.color = color;
+  el.className = 'combo-flash show';
+  setTimeout(() => el.className = 'combo-flash', 800);
+}
+
+const var_primary = '#00e5ff';
+
+function stopGame() {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  gameState = null;
+  // Clean up
+  $('#letter-game-area').innerHTML = '';
+  $('#word-game-area').innerHTML = '';
+  // Reset UI
+  $('#letter-config').classList.remove('hidden');
+  $('#letter-stats').classList.add('hidden');
+  $('#l-hp-container').classList.add('hidden');
+  $('#l-lives-bar').classList.add('hidden');
+  $('#word-config').classList.remove('hidden');
+  $('#word-stats').classList.add('hidden');
+  $('#w-hp-container').classList.add('hidden');
+  $('#word-input-display').classList.add('hidden');
+}
+
+// ----- 单词练习 -----
+let wordLen = 'short';
+let wordDifficulty = 1;
+
+function setWordLen(btn, len) {
+  wordLen = len;
+  btn.closest('.mode-tabs').querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setWordDifficulty(btn, diff) {
+  wordDifficulty = diff;
+  btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function startWordMode() {
+  showPage('word-page');
+  stopGame();
+}
+
+const WORD_DIFF_SETTINGS = {
+  1: { speed: 0.4, spawnRate: 3500, maxWords: 2, lives: 5 },
+  2: { speed: 0.6, spawnRate: 2800, maxWords: 3, lives: 4 },
+  3: { speed: 0.9, spawnRate: 2200, maxWords: 5, lives: 3 },
+};
+
+function startWordGame() {
+  const settings = WORD_DIFF_SETTINGS[wordDifficulty];
+  gameMode = 'word';
+  gameState = {
+    score: 0,
+    combo: 0,
+    maxComboThisGame: 0,
+    hits: 0,
+    misses: 0,
+    totalAttempts: 0,
+    wordsCompleted: 0,
+    lives: settings.lives,
+    maxLives: settings.lives,
+    words: [],
+    spawnTimer: 0,
+    spawnRate: settings.spawnRate,
+    speed: settings.speed,
+    maxWords: settings.maxWords,
+    startTime: Date.now(),
+    running: true,
+    wpm: 0,
+    currentTarget: null,
+    currentTyped: '',
+    difficulty: wordDifficulty
+  };
+
+  // UI
+  $('#word-config').classList.add('hidden');
+  $('#word-stats').classList.remove('hidden');
+  $('#w-hp-container').classList.remove('hidden');
+  $('#word-input-display').classList.remove('hidden');
+  $('#word-typed-text').textContent = '';
+  updateWordLivesBar();
+  updateWordHPBar();
+  updateWordStats();
+
+  lastFrameTime = Date.now();
+  gameLoop();
+}
+
+function updateWordLivesBar() {
+  // Reuse letter lives bar visibility
+  $('#l-lives-bar').classList.remove('hidden');
+  const bar = $('#l-lives-bar');
+  let html = '';
+  for (let i = 0; i < gameState.maxLives; i++) {
+    html += `<span class="heart ${i >= gameState.lives ? 'lost' : ''}">❤️</span>`;
+  }
+  bar.innerHTML = html;
+}
+
+function updateWordHPBar() {
+  const pct = (gameState.lives / gameState.maxLives) * 100;
+  $('#w-hp-bar').style.width = pct + '%';
+}
+
+function updateWordStats() {
+  $('#w-score').textContent = gameState.score;
+  $('#w-combo').textContent = gameState.combo;
+  const acc = gameState.totalAttempts > 0 ? Math.round(gameState.hits / gameState.totalAttempts * 100) : 100;
+  $('#w-accuracy').textContent = acc + '%';
+  const elapsed = (Date.now() - gameState.startTime) / 60000;
+  gameState.wpm = elapsed > 0 ? Math.round((gameState.wordsCompleted * 5) / elapsed) : 0;
+  $('#w-wpm').textContent = gameState.wpm;
+}
+
+function spawnWord() {
+  const pool = WORDS[wordLen];
+  // Avoid duplicates on screen
+  const onScreen = gameState.words.map(w => w.text);
+  let word;
+  let attempts = 0;
+  do {
+    word = pick(pool);
+    attempts++;
+  } while (onScreen.includes(word) && attempts < 20);
+
+  const area = $('#word-game-area');
+  const w = area.offsetWidth;
+  const x = rand(60, w - 100);
+  const el = document.createElement('div');
+  el.className = 'falling-word';
+  word.split('').forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.textContent = ch;
+    if (i === 0) span.classList.add('current');
+    el.appendChild(span);
+  });
+  el.style.left = x + 'px';
+  el.style.top = '-40px';
+  area.appendChild(el);
+  const wordObj = { text: word, x, y: -40, el, completed: false, missed: false, charIndex: 0 };
+  gameState.words.push(wordObj);
+}
+
+function removeWord(w) {
+  if (w.el && w.el.parentNode) w.el.parentNode.removeChild(w.el);
+  const idx = gameState.words.indexOf(w);
+  if (idx > -1) gameState.words.splice(idx, 1);
+}
+
+// ----- 键盘输入 -----
+document.addEventListener('keydown', e => {
+  if (!gameState || !gameState.running) return;
+  if (e.key === 'Escape') { stopGame(); goHome(); return; }
+
+  const key = e.key.toLowerCase();
+  flashKey(key);
+
+  if (gameMode === 'letter') {
+    handleLetterInput(key);
+  } else if (gameMode === 'word') {
+    handleWordInput(key);
+  }
+});
+
+function handleLetterInput(key) {
+  if (key.length !== 1 || !/[a-z;]/i.test(key)) return;
+  gameState.totalAttempts++;
+
+  // Find lowest matching letter (closest to bottom = most urgent)
+  let bestMatch = null;
+  let bestY = -1;
+  gameState.letters.forEach(l => {
+    if (!l.hit && !l.missed && l.char === key && l.y > bestY) {
+      bestMatch = l;
+      bestY = l.y;
+    }
+  });
+
+  if (bestMatch) {
+    bestMatch.hit = true;
+    gameState.hits++;
+    gameState.combo++;
+    if (gameState.combo > gameState.maxComboThisGame) gameState.maxComboThisGame = gameState.combo;
+
+    // Score: base + combo bonus
+    const comboMultiplier = 1 + Math.min(gameState.combo, 50) * 0.1;
+    const baseScore = 10;
+    const points = Math.round(baseScore * comboMultiplier);
+    gameState.score += points;
+
+    bestMatch.el.classList.add('hit');
+    spawnParticles(bestMatch.x, bestMatch.y, '#00ff88');
+    showComboFlash(gameState.combo);
+    setTimeout(() => removeLetter(bestMatch), 400);
+    updateLetterStats();
+  } else {
+    gameState.combo = 0;
+    updateLetterStats();
+  }
+}
+
+function handleWordInput(key) {
+  if (key.length !== 1 || !/[a-z]/i.test(key)) return;
+
+  // If no current target, find the word that starts with this letter (lowest = most urgent)
+  if (!gameState.currentTarget) {
+    let bestMatch = null;
+    let bestY = -1;
+    gameState.words.forEach(w => {
+      if (!w.completed && !w.missed && w.text[0] === key && w.y > bestY) {
+        bestMatch = w;
+        bestY = w.y;
+      }
+    });
+    if (!bestMatch) {
+      // Wrong key - penalty
+      gameState.totalAttempts++;
+      gameState.combo = 0;
+      updateWordStats();
+      return;
+    }
+    gameState.currentTarget = bestMatch;
+    gameState.currentTyped = key;
+    bestMatch.charIndex = 1;
+    updateWordDisplay(bestMatch);
+    gameState.totalAttempts++;
+    gameState.hits++;
+
+    // Check if single-char word
+    if (bestMatch.text.length === 1) {
+      completeWord(bestMatch);
+    }
+    updateWordStats();
+    return;
+  }
+
+  // Already typing a word
+  const target = gameState.currentTarget;
+  const expectedChar = target.text[target.charIndex];
+  gameState.totalAttempts++;
+
+  if (key === expectedChar) {
+    gameState.hits++;
+    gameState.currentTyped += key;
+    target.charIndex++;
+    updateWordDisplay(target);
+
+    if (target.charIndex >= target.text.length) {
+      completeWord(target);
+    }
+  } else {
+    // Wrong key
+    gameState.combo = 0;
+  }
+  updateWordStats();
+}
+
+function updateWordDisplay(word) {
+  const chars = word.el.querySelectorAll('.char');
+  chars.forEach((ch, i) => {
+    ch.classList.remove('typed', 'current');
+    if (i < word.charIndex) ch.classList.add('typed');
+    else if (i === word.charIndex) ch.classList.add('current');
+  });
+  $('#word-typed-text').textContent = gameState.currentTyped.toUpperCase();
+}
+
+function completeWord(word) {
+  word.completed = true;
+  gameState.wordsCompleted++;
+  gameState.combo++;
+  if (gameState.combo > gameState.maxComboThisGame) gameState.maxComboThisGame = gameState.combo;
+
+  const comboMultiplier = 1 + Math.min(gameState.combo, 50) * 0.1;
+  const baseScore = word.text.length * 15;
+  const points = Math.round(baseScore * comboMultiplier);
+  gameState.score += points;
+
+  word.el.classList.add('completed');
+  spawnParticles(word.x + 40, word.y, '#00e5ff');
+  showComboFlash(gameState.combo);
+
+  gameState.currentTarget = null;
+  gameState.currentTyped = '';
+  $('#word-typed-text').textContent = '';
+
+  setTimeout(() => removeWord(word), 500);
+  updateWordStats();
+}
+
+// Override gameLoop for word mode checks
+const _origGameLoop = gameLoop;
+// Already handled in the same gameLoop function - need to add word-specific logic
+
+// Patch: extend the game loop for word mode miss detection
+const origGameLoopFn = gameLoop;
+// Actually let me rewrite the game loop to handle both modes
+
+// Override gameLoop entirely
+function unifiedGameLoop() {
+  if (!gameState || !gameState.running) return;
+  const now = Date.now();
+  const dt = now - lastFrameTime;
+  lastFrameTime = now;
+
+  // Spawn
+  gameState.spawnTimer += dt;
+  if (gameMode === 'letter') {
+    if (gameState.spawnTimer >= gameState.spawnRate && gameState.letters.length < gameState.maxLetters) {
+      spawnLetter();
+      gameState.spawnTimer = 0;
+    }
+  } else {
+    if (gameState.spawnTimer >= gameState.spawnRate && gameState.words.length < gameState.maxWords) {
+      spawnWord();
+      gameState.spawnTimer = 0;
+    }
+  }
+
+  // Move
+  const area = gameMode === 'letter' ? '#letter-game-area' : '#word-game-area';
+  const areaEl = $(area);
+  const areaH = areaEl.offsetHeight;
+
+  const items = gameMode === 'letter' ? gameState.letters : gameState.words;
+
+  items.forEach(item => {
+    item.y += gameState.speed * (dt / 16);
+    if (item.el) item.el.style.top = item.y + 'px';
+  });
+
+  // Miss detection
+  items.forEach(item => {
+    if (item.y > areaH - 30 && !item.hit && !item.completed && !item.missed) {
+      item.missed = true;
+      gameState.lives--;
+      gameState.combo = 0;
+      gameState.misses++;
+      gameState.totalAttempts++;
+
+      // If this was the current target word, reset
+      if (gameMode === 'word' && item === gameState.currentTarget) {
+        gameState.currentTarget = null;
+        gameState.currentTyped = '';
+        $('#word-typed-text').textContent = '';
+      }
+
+      if (item.el) {
+        if (gameMode === 'letter') item.el.classList.add('miss');
+        else item.el.style.opacity = '0.3';
+      }
+      setTimeout(() => {
+        if (gameMode === 'letter') removeLetter(item);
+        else removeWord(item);
+      }, 400);
+
+      if (gameMode === 'letter') { updateHPBar(); updateLivesBar(); }
+      else { updateWordHPBar(); updateWordLivesBar(); }
+    }
+  });
+
+  if (gameState.lives <= 0) {
+    gameState.running = false;
+    endGame();
+    return;
+  }
+
+  if (gameMode === 'letter') updateLetterStats();
+  else updateWordStats();
+  animFrameId = requestAnimationFrame(unifiedGameLoop);
+}
+
+// Replace gameLoop reference
+gameLoop = unifiedGameLoop;
+
+// ----- 游戏结束 -----
+function endGame() {
+  cancelAnimationFrame(animFrameId);
+
+  const elapsed = (Date.now() - gameState.startTime) / 1000;
+  const accuracy = gameState.totalAttempts > 0 ? Math.round(gameState.hits / gameState.totalAttempts * 100) : 0;
+
+  // Calculate XP
+  const baseXP = Math.round(gameState.score * 0.5);
+  const accBonus = accuracy > 90 ? 50 : accuracy > 80 ? 25 : 0;
+  const comboBonus = Math.min(gameState.maxComboThisGame * 2, 100);
+  const totalXP = baseXP + accBonus + comboBonus;
+
+  // Update user stats
+  const oldLevel = currentUser.level;
+  currentUser.totalScore += gameState.score;
+  currentUser.totalXP += totalXP;
+  if (gameState.maxComboThisGame > currentUser.maxCombo) currentUser.maxCombo = gameState.maxComboThisGame;
+  if (gameState.wpm > currentUser.maxWPM) currentUser.maxWPM = gameState.wpm;
+  if (accuracy > currentUser.bestAccuracy) currentUser.bestAccuracy = accuracy;
+  if (gameState.score > currentUser.bestScore) currentUser.bestScore = gameState.score;
+  currentUser.totalGames++;
+  if (gameMode === 'letter') currentUser.letterGames++;
+  else currentUser.wordGames++;
+  currentUser.totalKeystrokes += gameState.totalAttempts;
+  currentUser.correctKeystrokes += gameState.hits;
+
+  // Recalculate level
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (currentUser.totalXP >= LEVELS[i].xpNeeded) {
+      currentUser.level = LEVELS[i].level;
+      break;
+    }
+  }
+
+  // Check achievements
+  checkAchievements();
+
+  currentUser.history.push({
+    mode: gameMode,
+    score: gameState.score,
+    wpm: gameState.wpm,
+    accuracy,
+    combo: gameState.maxComboThisGame,
+    xp: totalXP,
+    date: Date.now()
+  });
+  if (currentUser.history.length > 50) currentUser.history = currentUser.history.slice(-50);
+
+  saveCurrentUser();
+  refreshUserBar();
+
+  // Show result
+  $('#result-title').textContent = accuracy >= 90 ? '🎉 表现出色！' : accuracy >= 70 ? '👍 不错！继续加油！' : '💪 再接再厉！';
+  const statsHtml = `
+    <div class="result-stat"><div class="label">最终得分</div><div class="value" style="color:var(--gold)">${gameState.score}</div></div>
+    <div class="result-stat"><div class="label">最高连击</div><div class="value" style="color:var(--warning)">${gameState.maxComboThisGame}</div></div>
+    <div class="result-stat"><div class="label">准确率</div><div class="value">${accuracy}%</div></div>
+    <div class="result-stat"><div class="label">WPM</div><div class="value">${gameState.wpm}</div></div>
+    <div class="result-stat"><div class="label">用时</div><div class="value">${Math.round(elapsed)}s</div></div>
+    <div class="result-stat"><div class="label">命中/总击</div><div class="value">${gameState.hits}/${gameState.totalAttempts}</div></div>
+  `;
+  $('#result-stats').innerHTML = statsHtml;
+  $('#result-xp').innerHTML = `+${totalXP} XP (基础${baseXP} + 准确${accBonus} + 连击${comboBonus})`;
+  $('#result-overlay').classList.add('active');
+
+  // Check level up
+  if (currentUser.level > oldLevel) {
+    setTimeout(() => {
+      showLevelUp(oldLevel, currentUser.level);
+    }, 600);
+  }
+}
+
+function checkAchievements() {
+  const newAchievements = [];
+  ACHIEVEMENTS.forEach(ach => {
+    if (!currentUser.achievements.includes(ach.id) && ach.check(currentUser)) {
+      currentUser.achievements.push(ach.id);
+      newAchievements.push(ach);
+    }
+  });
+  return newAchievements;
+}
+
+function showLevelUp(oldLevel, newLevel) {
+  const lvl = LEVELS.find(l => l.level === newLevel);
+  $('#level-up-text').textContent = `升级到 Lv.${newLevel} ${lvl ? lvl.title : ''}`;
+  const rewards = [];
+  if (newLevel === 2) rewards.push('解锁上排键练习');
+  if (newLevel === 3) rewards.push('解锁中单词练习');
+  if (newLevel === 4) rewards.push('解锁困难难度');
+  if (newLevel === 5) rewards.push('解锁全部字母键');
+  if (newLevel === 6) rewards.push('解锁长单词练习');
+  if (newLevel === 7) rewards.push('解锁地狱难度');
+  if (rewards.length === 0) rewards.push('继续挑战更高难度！');
+  $('#level-up-rewards').textContent = '🎁 ' + rewards.join(' | ');
+  $('#level-up-toast').classList.add('active');
+}
+
+function closeLevelUp() {
+  $('#level-up-toast').classList.remove('active');
+}
+
+function restartGame() {
+  $('#result-overlay').classList.remove('active');
+  if (gameMode === 'letter') {
+    showPage('letter-page');
+    stopGame();
+    startLetterGame();
+  } else {
+    showPage('word-page');
+    stopGame();
+    startWordGame();
+  }
+}
+
+// ----- 排行榜 -----
+function showLeaderboard() {
+  showPage('lb-page');
+  const users = loadUsers();
+  const sorted = Object.values(users).sort((a, b) => b.totalScore - a.totalScore);
+  const body = $('#lb-body');
+  body.innerHTML = '';
+  sorted.forEach((u, i) => {
+    const rank = i + 1;
+    let badge = '';
+    if (rank === 1) badge = '<span class="rank-badge rank-1">1</span>';
+    else if (rank === 2) badge = '<span class="rank-badge rank-2">2</span>';
+    else if (rank === 3) badge = '<span class="rank-badge rank-3">3</span>';
+    else badge = `<span class="rank-badge" style="background:var(--bg-card);color:var(--text-dim)">${rank}</span>`;
+
+    const isMe = currentUser && u.name === currentUser.name;
+    body.innerHTML += `
+      <tr style="${isMe ? 'background:rgba(0,229,255,0.05);' : ''}">
+        <td>${badge}</td>
+        <td style="font-weight:${isMe ? '700' : '400'};color:${isMe ? 'var(--primary)' : 'var(--text)'};">${u.name}${isMe ? ' (我)' : ''}</td>
+        <td>Lv.${u.level}</td>
+        <td style="color:var(--gold)">⭐${u.totalScore}</td>
+        <td>${u.maxWPM}</td>
+        <td style="color:var(--warning)">🔥${u.maxCombo}</td>
+      </tr>
+    `;
+  });
+  if (sorted.length === 0) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:40px;">暂无数据，快去打字吧！</td></tr>';
+  }
+}
+
+// ----- 个人中心 -----
+function showProfile() {
+  showPage('profile-page');
+  if (!currentUser) return;
+
+  const lvl = getLevelInfo(currentUser);
+  $('#profile-avatar').textContent = currentUser.name[0].toUpperCase();
+  $('#profile-name').textContent = currentUser.name;
+  $('#profile-level').textContent = `Lv.${currentUser.level} ${lvl.current.title}`;
+  $('#profile-xp-fill').style.width = (lvl.progress * 100) + '%';
+  $('#profile-xp-text').textContent = `${lvl.xpInLevel} / ${lvl.xpNeeded} XP`;
+
+  const totalAcc = currentUser.totalKeystrokes > 0
+    ? Math.round(currentUser.correctKeystrokes / currentUser.totalKeystrokes * 100)
+    : 0;
+
+  const statsHtml = `
+    <div class="card game-stat"><div class="label">总分</div><div class="value score">${currentUser.totalScore}</div></div>
+    <div class="card game-stat"><div class="label">最高WPM</div><div class="value">${currentUser.maxWPM}</div></div>
+    <div class="card game-stat"><div class="label">最高连击</div><div class="value combo">${currentUser.maxCombo}</div></div>
+    <div class="card game-stat"><div class="label">最佳准确率</div><div class="value">${currentUser.bestAccuracy}%</div></div>
+    <div class="card game-stat"><div class="label">总游戏局数</div><div class="value">${currentUser.totalGames}</div></div>
+    <div class="card game-stat"><div class="label">总按键次数</div><div class="value">${currentUser.totalKeystrokes}</div></div>
+    <div class="card game-stat"><div class="label">字母局数</div><div class="value">${currentUser.letterGames}</div></div>
+    <div class="card game-stat"><div class="label">单词局数</div><div class="value">${currentUser.wordGames}</div></div>
+  `;
+  $('#profile-stats').innerHTML = statsHtml;
+
+  // Achievements
+  const grid = $('#achievements-grid');
+  grid.innerHTML = '';
+  ACHIEVEMENTS.forEach(ach => {
+    const unlocked = currentUser.achievements.includes(ach.id);
+    grid.innerHTML += `
+      <div class="achievement ${unlocked ? 'unlocked' : 'locked'}">
+        <div class="ach-icon">${ach.icon}</div>
+        <div class="ach-name">${ach.name}</div>
+        <div class="ach-desc">${ach.desc}</div>
+      </div>
+    `;
+  });
+}
+
+// ----- 初始化 -----
+refreshUserList();
+
+// Auto-login if only one user
+const users = loadUsers();
+const names = Object.keys(users);
+if (names.length === 1) {
+  // Don't auto-login, let user choose
+}
+</script>
+</body>
+</html>
