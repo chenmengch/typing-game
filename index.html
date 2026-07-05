@@ -1193,7 +1193,8 @@ function initKeyboardHint() {
     row.forEach(key => {
       const k = document.createElement('div');
       k.className = 'key-hint';
-      k.id = 'key-' + key;
+      // 用 data-key 存储按键标识，避免分号作为 CSS id 不合法的问题
+      k.setAttribute('data-key', key.toLowerCase());
       k.textContent = key.toUpperCase();
       if (key === 'f' || key === 'j') k.classList.add('home-row');
       rowDiv.appendChild(k);
@@ -1204,7 +1205,7 @@ function initKeyboardHint() {
 initKeyboardHint();
 
 function flashKey(key) {
-  const el = $('#key-' + key.toLowerCase());
+  const el = document.querySelector(`.key-hint[data-key="${CSS.escape(key.toLowerCase())}"]`);
   if (!el) return;
   el.classList.add('active');
   setTimeout(() => el.classList.remove('active'), 200);
@@ -1681,11 +1682,37 @@ function removeWord(w) {
 }
 
 // ----- 键盘输入 -----
+// e.code → 字符映射表，解决中文输入法下 e.key 识别异常的问题
+const CODE_TO_CHAR = {
+  'KeyA':'a','KeyB':'b','KeyC':'c','KeyD':'d','KeyE':'e','KeyF':'f','KeyG':'g',
+  'KeyH':'h','KeyI':'i','KeyJ':'j','KeyK':'k','KeyL':'l','KeyM':'m','KeyN':'n',
+  'KeyO':'o','KeyP':'p','KeyQ':'q','KeyR':'r','KeyS':'s','KeyT':'t','KeyU':'u',
+  'KeyV':'v','KeyW':'w','KeyX':'x','KeyY':'y','KeyZ':'z',
+  'Semicolon':';', 'Slash':'/'
+};
+
 document.addEventListener('keydown', e => {
+  // === 调试信息（按 F2 显示/隐藏调试面板） ===
+  if (e.key === 'F2') {
+    const db = document.getElementById('key-debug');
+    if (db) db.style.display = db.style.display === 'none' ? 'block' : 'none';
+    return;
+  }
+  if (document.getElementById('key-debug')) {
+    const db = document.getElementById('key-debug');
+    db.textContent = `e.key="${e.key}" | e.code="${e.code}" | keyCode=${e.keyCode} | which=${e.which} | isComposing=${e.isComposing}`;
+  }
+
   if (!gameState || !gameState.running) return;
   if (e.key === 'Escape') { stopGame(); goHome(); return; }
 
-  const key = e.key.toLowerCase();
+  // 优先使用 e.code 映射，避免中文输入法干扰
+  let key = (CODE_TO_CHAR[e.code] || e.key).toLowerCase();
+  // 兜底：如果 e.code 也识别不到，用 keyCode
+  if (!key || key.length !== 1) {
+    if (e.keyCode === 186 || e.which === 186) key = ';';
+  }
+
   flashKey(key);
 
   if (gameMode === 'letter') {
@@ -1694,6 +1721,15 @@ document.addEventListener('keydown', e => {
     handleWordInput(key);
   }
 });
+
+// 添加调试面板（按 F2 显示）
+(function(){
+  const db = document.createElement('div');
+  db.id = 'key-debug';
+  db.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;z-index:999;background:rgba(0,0,0,0.9);color:#0f0;font-family:monospace;font-size:13px;padding:8px 12px;border:1px solid #0f0;border-radius:8px;display:none;pointer-events:none;';
+  db.textContent = 'Press F2 to show/hide. Press any key to see debug info.';
+  document.body.appendChild(db);
+})();
 
 function handleLetterInput(key) {
   if (key.length !== 1 || !/[a-z;]/i.test(key)) return;
