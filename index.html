@@ -851,6 +851,8 @@
     <span class="stat">⭐ <span id="bar-score">0</span></span>
   </div>
   <div class="right">
+    <span class="stat" style="cursor:pointer" id="sound-toggle" onclick="toggleSound()" title="音效开关">🔊 音效</span>
+    <span class="stat" style="cursor:pointer" id="bgm-toggle" onclick="toggleBGM()" title="背景音乐">🎵 背景音乐</span>
     <span class="stat" title="最高连击">🔥 <span id="bar-max-combo">0</span></span>
     <span class="stat" title="总游戏局数">🎮 <span id="bar-games">0</span></span>
   </div>
@@ -906,6 +908,7 @@
         <div class="mode-tabs">
           <button class="mode-tab active" data-rows="home" onclick="setLetterRow(this,'home')">主行键</button>
           <button class="mode-tab" data-rows="top" onclick="setLetterRow(this,'top')">上排键</button>
+          <button class="mode-tab" data-rows="bottom" onclick="setLetterRow(this,'bottom')">下排键</button>
           <button class="mode-tab" data-rows="all" onclick="setLetterRow(this,'all')">全部</button>
         </div>
       </div>
@@ -914,6 +917,20 @@
         <button class="diff-btn" onclick="setDifficulty(this,2)">⚡ 普通</button>
         <button class="diff-btn" onclick="setDifficulty(this,3)">🔥 困难</button>
         <button class="diff-btn" onclick="setDifficulty(this,4)">💀 地狱</button>
+      </div>
+      <div class="difficulty-select" style="margin-top:8px;">
+        <button class="diff-btn active" onclick="setTimeLimit(this,0)">⏱ 无限时间</button>
+        <button class="diff-btn" onclick="setTimeLimit(this,60)">⏱ 1分钟</button>
+        <button class="diff-btn" onclick="setTimeLimit(this,180)">⏱ 3分钟</button>
+        <button class="diff-btn" onclick="setTimeLimit(this,300)">⏱ 5分钟</button>
+        <button class="diff-btn" onclick="setTimeLimit(this,480)">⏱ 8分钟</button>
+      </div>
+      <div class="difficulty-select" style="margin-top:8px;">
+        <button class="diff-btn active" onclick="setTargetScore(this,0)">🎯 无目标</button>
+        <button class="diff-btn" onclick="setTargetScore(this,80)">🎯 80分</button>
+        <button class="diff-btn" onclick="setTargetScore(this,250)">🎯 250分</button>
+        <button class="diff-btn" onclick="setTargetScore(this,500)">🎯 500分</button>
+        <button class="diff-btn" onclick="setTargetScore(this,800)">🎯 800分</button>
       </div>
       <div style="text-align:center;margin-top:12px;">
         <button class="btn btn-success" onclick="startLetterGame()" id="letter-start-btn">开始游戏</button>
@@ -935,6 +952,14 @@
       <div class="game-stat">
         <div class="label">WPM</div>
         <div class="value" id="l-wpm">0</div>
+      </div>
+      <div class="game-stat" id="l-timer-stat" style="display:none">
+        <div class="label">剩余时间</div>
+        <div class="value" id="l-timer" style="color:var(--warning)">60s</div>
+      </div>
+      <div class="game-stat" id="l-target-stat" style="display:none">
+        <div class="label">目标</div>
+        <div class="value" id="l-target">100</div>
       </div>
     </div>
     <div id="letter-game-area"></div>
@@ -963,6 +988,20 @@
         <button class="diff-btn" onclick="setWordDifficulty(this,2)">⚡ 普通</button>
         <button class="diff-btn" onclick="setWordDifficulty(this,3)">🔥 困难</button>
       </div>
+      <div class="difficulty-select" style="margin-top:8px;">
+        <button class="diff-btn active" onclick="setWordTimeLimit(this,0)">⏱ 无限时间</button>
+        <button class="diff-btn" onclick="setWordTimeLimit(this,60)">⏱ 1分钟</button>
+        <button class="diff-btn" onclick="setWordTimeLimit(this,180)">⏱ 3分钟</button>
+        <button class="diff-btn" onclick="setWordTimeLimit(this,300)">⏱ 5分钟</button>
+        <button class="diff-btn" onclick="setWordTimeLimit(this,480)">⏱ 8分钟</button>
+      </div>
+      <div class="difficulty-select" style="margin-top:8px;">
+        <button class="diff-btn active" onclick="setWordTargetScore(this,0)">🎯 无目标</button>
+        <button class="diff-btn" onclick="setWordTargetScore(this,120)">🎯 120分</button>
+        <button class="diff-btn" onclick="setWordTargetScore(this,350)">🎯 350分</button>
+        <button class="diff-btn" onclick="setWordTargetScore(this,600)">🎯 600分</button>
+        <button class="diff-btn" onclick="setWordTargetScore(this,1000)">🎯 1000分</button>
+      </div>
       <div style="text-align:center;margin-top:12px;">
         <button class="btn btn-success" onclick="startWordGame()" id="word-start-btn">开始游戏</button>
       </div>
@@ -983,6 +1022,14 @@
       <div class="game-stat">
         <div class="label">WPM</div>
         <div class="value" id="w-wpm">0</div>
+      </div>
+      <div class="game-stat" id="w-timer-stat" style="display:none">
+        <div class="label">剩余时间</div>
+        <div class="value" id="w-timer" style="color:var(--warning)">60s</div>
+      </div>
+      <div class="game-stat" id="w-target-stat" style="display:none">
+        <div class="label">目标</div>
+        <div class="value" id="w-target">150</div>
       </div>
     </div>
     <div id="word-game-area"></div>
@@ -1075,9 +1122,124 @@ const ACHIEVEMENTS = [
   { id: 'level_10',    icon: '🏅', name: '实力超群',   desc: '达到等级10', check: u => u.level >= 10 },
 ];
 
+// ===== 音效系统 (Web Audio API，无需外部文件) =====
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+let soundEnabled = true;
+let bgmEnabled = false;
+let bgmOsc = null;
+let bgmGain = null;
+
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, duration, type, volume, detune) {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  if (detune) osc.detune.value = detune;
+  gain.gain.setValueAtTime(volume || 0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function sfxHit() {
+  playTone(880, 0.08, 'square', 0.08);
+  playTone(1200, 0.1, 'sine', 0.06);
+}
+
+function sfxMiss() {
+  playTone(200, 0.15, 'sawtooth', 0.08);
+  playTone(150, 0.2, 'sine', 0.06);
+}
+
+function sfxCombo(level) {
+  const baseFreq = 600 + level * 50;
+  playTone(baseFreq, 0.12, 'sine', 0.1);
+  setTimeout(() => playTone(baseFreq * 1.25, 0.12, 'sine', 0.08), 60);
+  setTimeout(() => playTone(baseFreq * 1.5, 0.15, 'sine', 0.06), 120);
+}
+
+function sfxLevelUp() {
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((f, i) => {
+    setTimeout(() => playTone(f, 0.2, 'sine', 0.12), i * 120);
+  });
+}
+
+function sfxGameOver() {
+  playTone(400, 0.2, 'sawtooth', 0.08);
+  setTimeout(() => playTone(300, 0.3, 'sawtooth', 0.06), 200);
+  setTimeout(() => playTone(200, 0.5, 'sawtooth', 0.05), 400);
+}
+
+function sfxGameWin() {
+  const notes = [523, 659, 784, 1047, 1319];
+  notes.forEach((f, i) => {
+    setTimeout(() => playTone(f, 0.15, 'sine', 0.1), i * 100);
+  });
+}
+
+function sfxTick() {
+  playTone(1000, 0.03, 'square', 0.04);
+}
+
+// 背景音乐 - 简单循环旋律
+let bgmInterval = null;
+const BGM_NOTES = [
+  262, 294, 330, 349, 392, 349, 330, 294,
+  330, 349, 392, 440, 494, 440, 392, 349,
+  392, 440, 494, 523, 587, 523, 494, 440,
+  523, 494, 440, 392, 349, 330, 294, 262
+];
+
+function startBGM() {
+  if (bgmInterval) return;
+  bgmEnabled = true;
+  ensureAudioCtx();
+  let noteIdx = 0;
+  bgmInterval = setInterval(() => {
+    if (!bgmEnabled || !soundEnabled) return;
+    const freq = BGM_NOTES[noteIdx % BGM_NOTES.length];
+    playTone(freq, 0.28, 'sine', 0.03);
+    playTone(freq * 0.5, 0.28, 'triangle', 0.02);
+    noteIdx++;
+  }, 320);
+}
+
+function stopBGM() {
+  bgmEnabled = false;
+  if (bgmInterval) { clearInterval(bgmInterval); bgmInterval = null; }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  if (!soundEnabled) stopBGM();
+  const btn = $('#sound-toggle');
+  if (btn) btn.textContent = soundEnabled ? '🔊 音效' : '🔇 静音';
+}
+
+function toggleBGM() {
+  if (bgmEnabled) stopBGM();
+  else startBGM();
+  const btn = $('#bgm-toggle');
+  if (btn) btn.textContent = bgmEnabled ? '🎵 停止BGM' : '🎵 背景音乐';
+}
+
+// ===== 音效系统结束 =====
+
 const LETTER_SETS = {
   home: 'asdfjkl;',
   top: 'qwertyuiop',
+  bottom: 'zxcvbnm',
   all: 'abcdefghijklmnopqrstuvwxyz'
 };
 
@@ -1331,6 +1493,8 @@ function goHome() {
 // ----- 字母练习 -----
 let letterRow = 'home';
 let letterDifficulty = 1;
+let letterTimeLimit = 0;   // 0 = 无限制
+let letterTargetScore = 0; // 0 = 无目标
 
 function setLetterRow(btn, row) {
   letterRow = row;
@@ -1340,6 +1504,18 @@ function setLetterRow(btn, row) {
 
 function setDifficulty(btn, diff) {
   letterDifficulty = diff;
+  btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setTimeLimit(btn, seconds) {
+  letterTimeLimit = seconds;
+  btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setTargetScore(btn, score) {
+  letterTargetScore = score;
   btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -1376,7 +1552,11 @@ function startLetterGame() {
     startTime: Date.now(),
     running: true,
     wpm: 0,
-    difficulty: letterDifficulty
+    difficulty: letterDifficulty,
+    timeLimit: letterTimeLimit,
+    targetScore: letterTargetScore,
+    timeRemaining: letterTimeLimit,
+    endReason: null // 'timeup' | 'target' | 'lives'
   };
 
   // UI
@@ -1384,6 +1564,10 @@ function startLetterGame() {
   $('#letter-stats').classList.remove('hidden');
   $('#l-hp-container').classList.remove('hidden');
   $('#l-lives-bar').classList.remove('hidden');
+  // 显示/隐藏时间/目标统计
+  $('#l-timer-stat').style.display = letterTimeLimit > 0 ? 'block' : 'none';
+  $('#l-target-stat').style.display = letterTargetScore > 0 ? 'block' : 'none';
+  if (letterTargetScore > 0) $('#l-target').textContent = letterTargetScore;
   updateLivesBar();
   updateHPBar();
   updateLetterStats();
@@ -1415,6 +1599,15 @@ function updateLetterStats() {
   const elapsed = (Date.now() - gameState.startTime) / 60000;
   gameState.wpm = elapsed > 0 ? Math.round(gameState.hits / 5 / elapsed) : 0;
   $('#l-wpm').textContent = gameState.wpm;
+  // 更新时间
+  if (gameState.timeLimit > 0) {
+    const timerEl = $('#l-timer');
+    const rem = Math.max(0, Math.ceil(gameState.timeRemaining));
+    timerEl.textContent = rem >= 60 ? Math.floor(rem/60) + ':' + String(rem%60).padStart(2,'0') : rem + 's';
+    if (gameState.timeRemaining <= 10) timerEl.style.color = 'var(--danger)';
+    else if (gameState.timeRemaining <= 30) timerEl.style.color = 'var(--warning)';
+    else timerEl.style.color = 'var(--success)';
+  }
 }
 
 let lastFrameTime = 0;
@@ -1546,15 +1739,21 @@ function stopGame() {
   $('#letter-stats').classList.add('hidden');
   $('#l-hp-container').classList.add('hidden');
   $('#l-lives-bar').classList.add('hidden');
+  $('#l-timer-stat').style.display = 'none';
+  $('#l-target-stat').style.display = 'none';
   $('#word-config').classList.remove('hidden');
   $('#word-stats').classList.add('hidden');
   $('#w-hp-container').classList.add('hidden');
   $('#word-input-display').classList.add('hidden');
+  $('#w-timer-stat').style.display = 'none';
+  $('#w-target-stat').style.display = 'none';
 }
 
 // ----- 单词练习 -----
 let wordLen = 'short';
 let wordDifficulty = 1;
+let wordTimeLimit = 0;
+let wordTargetScore = 0;
 
 function setWordLen(btn, len) {
   wordLen = len;
@@ -1564,6 +1763,18 @@ function setWordLen(btn, len) {
 
 function setWordDifficulty(btn, diff) {
   wordDifficulty = diff;
+  btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setWordTimeLimit(btn, seconds) {
+  wordTimeLimit = seconds;
+  btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setWordTargetScore(btn, score) {
+  wordTargetScore = score;
   btn.closest('.difficulty-select').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -1602,7 +1813,11 @@ function startWordGame() {
     wpm: 0,
     currentTarget: null,
     currentTyped: '',
-    difficulty: wordDifficulty
+    difficulty: wordDifficulty,
+    timeLimit: wordTimeLimit,
+    targetScore: wordTargetScore,
+    timeRemaining: wordTimeLimit,
+    endReason: null
   };
 
   // UI
@@ -1611,6 +1826,9 @@ function startWordGame() {
   $('#w-hp-container').classList.remove('hidden');
   $('#word-input-display').classList.remove('hidden');
   $('#word-typed-text').textContent = '';
+  $('#w-timer-stat').style.display = wordTimeLimit > 0 ? 'block' : 'none';
+  $('#w-target-stat').style.display = wordTargetScore > 0 ? 'block' : 'none';
+  if (wordTargetScore > 0) $('#w-target').textContent = wordTargetScore;
   updateWordLivesBar();
   updateWordHPBar();
   updateWordStats();
@@ -1643,6 +1861,15 @@ function updateWordStats() {
   const elapsed = (Date.now() - gameState.startTime) / 60000;
   gameState.wpm = elapsed > 0 ? Math.round((gameState.wordsCompleted * 5) / elapsed) : 0;
   $('#w-wpm').textContent = gameState.wpm;
+  // 更新时间
+  if (gameState.timeLimit > 0) {
+    const timerEl = $('#w-timer');
+    const rem = Math.max(0, Math.ceil(gameState.timeRemaining));
+    timerEl.textContent = rem >= 60 ? Math.floor(rem/60) + ':' + String(rem%60).padStart(2,'0') : rem + 's';
+    if (gameState.timeRemaining <= 10) timerEl.style.color = 'var(--danger)';
+    else if (gameState.timeRemaining <= 30) timerEl.style.color = 'var(--warning)';
+    else timerEl.style.color = 'var(--success)';
+  }
 }
 
 function spawnWord() {
@@ -1759,10 +1986,13 @@ function handleLetterInput(key) {
 
     bestMatch.el.classList.add('hit');
     spawnParticles(bestMatch.x, bestMatch.y, '#00ff88');
+    sfxHit();
+    if (gameState.combo >= 5 && gameState.combo % 5 === 0) sfxCombo(Math.floor(gameState.combo / 5));
     showComboFlash(gameState.combo);
     setTimeout(() => removeLetter(bestMatch), 400);
     updateLetterStats();
   } else {
+    sfxMiss();
     gameState.combo = 0;
     updateLetterStats();
   }
@@ -1785,6 +2015,7 @@ function handleWordInput(key) {
       // Wrong key - penalty
       gameState.totalAttempts++;
       gameState.combo = 0;
+      sfxMiss();
       updateWordStats();
       return;
     }
@@ -1819,6 +2050,7 @@ function handleWordInput(key) {
     }
   } else {
     // Wrong key
+    sfxMiss();
     gameState.combo = 0;
   }
   updateWordStats();
@@ -1847,6 +2079,8 @@ function completeWord(word) {
 
   word.el.classList.add('completed');
   spawnParticles(word.x + 40, word.y, '#00e5ff');
+  sfxHit();
+  if (gameState.combo >= 5 && gameState.combo % 5 === 0) sfxCombo(Math.floor(gameState.combo / 5));
   showComboFlash(gameState.combo);
 
   gameState.currentTarget = null;
@@ -1906,6 +2140,7 @@ function unifiedGameLoop() {
       gameState.combo = 0;
       gameState.misses++;
       gameState.totalAttempts++;
+      sfxMiss();
 
       // If this was the current target word, reset
       if (gameMode === 'word' && item === gameState.currentTarget) {
@@ -1928,7 +2163,27 @@ function unifiedGameLoop() {
     }
   });
 
+  // 倒计时
+  if (gameState.timeLimit > 0) {
+    gameState.timeRemaining = Math.max(0, gameState.timeLimit - (now - gameState.startTime) / 1000);
+    if (gameState.timeRemaining <= 0) {
+      gameState.endReason = 'timeup';
+      gameState.running = false;
+      endGame();
+      return;
+    }
+  }
+
+  // 目标分数检测
+  if (gameState.targetScore > 0 && gameState.score >= gameState.targetScore) {
+    gameState.endReason = 'target';
+    gameState.running = false;
+    endGame();
+    return;
+  }
+
   if (gameState.lives <= 0) {
+    gameState.endReason = 'lives';
     gameState.running = false;
     endGame();
     return;
@@ -1945,6 +2200,7 @@ gameLoop = unifiedGameLoop;
 // ----- 游戏结束 -----
 function endGame() {
   cancelAnimationFrame(animFrameId);
+  stopBGM();
 
   const elapsed = (Date.now() - gameState.startTime) / 1000;
   const accuracy = gameState.totalAttempts > 0 ? Math.round(gameState.hits / gameState.totalAttempts * 100) : 0;
@@ -1994,8 +2250,32 @@ function endGame() {
   saveCurrentUser();
   refreshUserBar();
 
-  // Show result
-  $('#result-title').textContent = accuracy >= 90 ? '🎉 表现出色！' : accuracy >= 70 ? '👍 不错！继续加油！' : '💪 再接再厉！';
+  // Show result - 根据闯关结果显示不同标题
+  let title = '';
+  if (gameState.endReason === 'target') {
+    title = '🎉 闯关成功！目标达成！';
+    sfxGameWin();
+  } else if (gameState.endReason === 'timeup') {
+    title = accuracy >= 70 ? '⏱ 时间到！表现不错！' : '⏱ 时间到！继续加油！';
+    sfxGameOver();
+  } else if (gameState.endReason === 'lives') {
+    title = '💔 生命耗尽！再接再厉！';
+    sfxGameOver();
+  } else {
+    title = accuracy >= 90 ? '🎉 表现出色！' : accuracy >= 70 ? '👍 不错！继续加油！' : '💪 再接再厉！';
+    sfxGameOver();
+  }
+  $('#result-title').textContent = title;
+  // 闯关条件信息
+  let conditionHtml = '';
+  if (gameState.timeLimit > 0) {
+    conditionHtml += `<div class="result-stat"><div class="label">时间限制</div><div class="value" style="color:var(--warning)">${gameState.timeLimit}s</div></div>`;
+  }
+  if (gameState.targetScore > 0) {
+    const reached = gameState.score >= gameState.targetScore;
+    conditionHtml += `<div class="result-stat"><div class="label">目标分数</div><div class="value" style="color:${reached ? 'var(--success)' : 'var(--danger)'}">${gameState.targetScore}${reached ? ' ✓' : ''}</div></div>`;
+  }
+
   const statsHtml = `
     <div class="result-stat"><div class="label">最终得分</div><div class="value" style="color:var(--gold)">${gameState.score}</div></div>
     <div class="result-stat"><div class="label">最高连击</div><div class="value" style="color:var(--warning)">${gameState.maxComboThisGame}</div></div>
@@ -2003,6 +2283,7 @@ function endGame() {
     <div class="result-stat"><div class="label">WPM</div><div class="value">${gameState.wpm}</div></div>
     <div class="result-stat"><div class="label">用时</div><div class="value">${Math.round(elapsed)}s</div></div>
     <div class="result-stat"><div class="label">命中/总击</div><div class="value">${gameState.hits}/${gameState.totalAttempts}</div></div>
+    ${conditionHtml}
   `;
   $('#result-stats').innerHTML = statsHtml;
   $('#result-xp').innerHTML = `+${totalXP} XP (基础${baseXP} + 准确${accBonus} + 连击${comboBonus})`;
@@ -2028,6 +2309,7 @@ function checkAchievements() {
 }
 
 function showLevelUp(oldLevel, newLevel) {
+  sfxLevelUp();
   const lvl = LEVELS.find(l => l.level === newLevel);
   $('#level-up-text').textContent = `升级到 Lv.${newLevel} ${lvl ? lvl.title : ''}`;
   const rewards = [];
