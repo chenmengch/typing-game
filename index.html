@@ -1480,6 +1480,7 @@ function getLevelInfo(user) {
 
 // ----- 首页 -----
 function goHome() {
+  $('#result-overlay').classList.remove('active');
   stopGame();
   showPage('home-page');
   if (currentUser) {
